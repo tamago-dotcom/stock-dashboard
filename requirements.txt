@@ -1,0 +1,7 @@
+streamlit
+yfinance
+plotly
+mplfinance
+scikit-learn
+numpy
+matplotlib-fontja
