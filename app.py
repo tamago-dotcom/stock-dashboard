@@ -1,6 +1,9 @@
 import streamlit as st
 import yfinance as yf
 import mplfinance as mpf
+from curl_cffi import requests as curl_requests
+
+_session = curl_requests.Session(impersonate="chrome")
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -322,7 +325,7 @@ with tab_dashboard:
 
         if st.session_state.get("hist_all") is None:
             with st.spinner(f"{ticker} のデータを取得中..."):
-                stock = yf.Ticker(ticker)
+                stock = yf.Ticker(ticker, session=_session)
                 info = stock.info
                 hist_all = stock.history(period="10y")
                 if hist_all.empty:
@@ -409,7 +412,7 @@ with tab_dashboard:
             cache_key = f"{ticker}_{selected_period}"
             if st.session_state.get("intraday_key") != cache_key:
                 with st.spinner(f"{selected_period}のデータを取得中..."):
-                    stk = yf.Ticker(ticker)
+                    stk = yf.Ticker(ticker, session=_session)
                     intraday = stk.history(period=cfg["period"], interval=cfg["interval"])
                     st.session_state["intraday_hist"] = intraday
                     st.session_state["intraday_key"] = cache_key
@@ -552,7 +555,7 @@ with tab_predict:
         # 銘柄が変わったときだけ再学習
         if st.session_state.get("predict_ticker") != ticker_sym:
             with st.spinner("予測モデルを学習中...（数秒かかります）"):
-                df_pred = yf.download(ticker_sym, period="5y", interval="1d", auto_adjust=True, progress=False)
+                df_pred = yf.download(ticker_sym, period="5y", interval="1d", auto_adjust=True, progress=False, session=_session)
                 if isinstance(df_pred.columns, pd.MultiIndex):
                     df_pred.columns = df_pred.columns.droplevel(1)
 
@@ -652,7 +655,7 @@ with tab_predict:
                 index_sym  = "^N225" if ticker_sym.endswith(".T") else "^GSPC"
                 index_name = "Nikkei 225" if ticker_sym.endswith(".T") else "S&P 500"
                 idx_raw = yf.download(index_sym, period="5y", interval="1d",
-                                      auto_adjust=True, progress=False)
+                                      auto_adjust=True, progress=False, session=_session)
                 if isinstance(idx_raw.columns, pd.MultiIndex):
                     idx_raw.columns = idx_raw.columns.droplevel(1)
                 idx_close = idx_raw["Close"].reindex(test_dates, method="ffill").dropna()
@@ -800,7 +803,7 @@ with tab_tomorrow:
 
         with st.spinner("最新データを取得して予測中..."):
             df_lt = yf.download(ticker_sym, period="3mo", interval="1d",
-                                auto_adjust=True, progress=False)
+                                auto_adjust=True, progress=False, session=_session)
             if isinstance(df_lt.columns, pd.MultiIndex):
                 df_lt.columns = df_lt.columns.droplevel(1)
 
@@ -909,7 +912,7 @@ with tab_financial:
         # 取得済みでなければフェッチ
         if st.session_state.get("fin_ticker_loaded") != fin_ticker:
             with st.spinner("財務データを取得中..."):
-                stk = yf.Ticker(fin_ticker)
+                stk = yf.Ticker(fin_ticker, session=_session)
                 st.session_state["income_stmt"]   = stk.income_stmt
                 st.session_state["balance_sheet"]  = stk.balance_sheet
                 st.session_state["cashflow"]       = stk.cashflow
@@ -997,7 +1000,7 @@ with tab_search:
     if search_submitted and search_query:
         with st.spinner("検索中..."):
             try:
-                results = yf.Search(search_query, max_results=20)
+                results = yf.Search(search_query, max_results=20, session=_session)
                 quotes = results.quotes
             except Exception as e:
                 quotes = []

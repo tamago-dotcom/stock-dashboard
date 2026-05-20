@@ -5,3 +5,4 @@ mplfinance
 scikit-learn
 numpy
 matplotlib-fontja
+curl_cffi
