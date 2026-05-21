@@ -1,9 +1,12 @@
 import streamlit as st
 import yfinance as yf
 import mplfinance as mpf
-from curl_cffi import requests as curl_requests
+import requests as _requests
 
-_session = curl_requests.Session(impersonate="chrome")
+_session = _requests.Session()
+_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+})
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib as mpl
